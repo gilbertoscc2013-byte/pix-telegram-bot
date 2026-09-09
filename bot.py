@@ -1,4 +1,5 @@
 import os
+print("TESTE BOT.PY INICIADO")
 import threading
 import uuid
 import json
