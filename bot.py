@@ -134,9 +134,26 @@ async def pix(update: Update, context: ContextTypes.DEFAULT_TYPE):
 class HealthHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
+        html = """
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Pix Pagamentos</title>
+        </head>
+        <body>
+            <h1>Pix Pagamentos</h1>
+            <p>Sistema de pagamentos Pix integrado ao Telegram.</p>
+            <p>Geração de cobranças Pix de forma rápida e segura.</p>
+        </body>
+        </html>
+        """
+
         self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
         self.end_headers()
-        self.wfile.write(b"Bot online!")
+        self.wfile.write(html.encode("utf-8"))
 
     def log_message(self, format, *args):
         pass
