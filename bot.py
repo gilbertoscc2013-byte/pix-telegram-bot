@@ -6,7 +6,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 
 import mercadopago
 from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler
 
 
 # =========================
@@ -35,7 +35,8 @@ sdk = mercadopago.SDK(MERCADOPAGO_ACCESS_TOKEN)
 # TELEGRAM
 # =========================
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def start(update: Update, context: object):
+
     await update.message.reply_text(
         "👋 Olá!\n\n"
         "Bem-vindo ao Pix Pagamentos.\n\n"
@@ -44,7 +45,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-async def pix(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def pix(update: Update, context: object):
+
     try:
 
         email = (
@@ -78,9 +80,11 @@ async def pix(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         if not payment:
+
             await update.message.reply_text(
                 "❌ Não foi possível criar o pagamento."
             )
+
             return
 
         status = payment.get("status")
@@ -89,6 +93,7 @@ async def pix(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "pending",
             "in_process"
         ]:
+
             print(
                 "Resposta Mercado Pago:",
                 payment
@@ -98,6 +103,7 @@ async def pix(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "❌ O Mercado Pago retornou um erro.\n"
                 f"Status: {status}"
             )
+
             return
 
         payment_id = payment.get("id")
@@ -164,57 +170,84 @@ class HealthHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
 
-        html = """
-        <!DOCTYPE html>
-        <html lang="pt-BR">
+        if self.path == "/":
 
-        <head>
-            <meta charset="UTF-8">
+            html = """
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport"
+                      content="width=device-width, initial-scale=1.0">
+                <title>Pix Pagamentos</title>
+            </head>
 
-            <meta
-                name="viewport"
-                content="width=device-width, initial-scale=1.0"
-            >
+            <body>
 
-            <title>Pix Pagamentos</title>
-        </head>
+                <h1>Pix Pagamentos</h1>
 
-        <body>
+                <p>
+                    Sistema de pagamentos Pix
+                    integrado ao Telegram.
+                </p>
 
-            <h1>Pix Pagamentos</h1>
+                <p>
+                    Geração de cobranças Pix
+                    de forma rápida e segura.
+                </p>
 
-            <p>
-                Sistema de pagamentos Pix
-                integrado ao Telegram.
-            </p>
+            </body>
+            </html>
+            """
 
-            <p>
-                Geração de cobranças Pix
-                de forma rápida e segura.
-            </p>
+            self.send_response(200)
 
-        </body>
+            self.send_header(
+                "Content-Type",
+                "text/html; charset=utf-8"
+            )
 
-        </html>
-        """
+            self.end_headers()
 
-        self.send_response(200)
+            self.wfile.write(
+                html.encode("utf-8")
+            )
 
-        self.send_header(
-            "Content-Type",
-            "text/html; charset=utf-8"
-        )
+            return
+
+        if self.path == "/webhook":
+
+            self.send_response(200)
+
+            self.send_header(
+                "Content-Type",
+                "text/plain; charset=utf-8"
+            )
+
+            self.end_headers()
+
+            self.wfile.write(
+                b"Webhook Mercado Pago ativo"
+            )
+
+            return
+
+        self.send_response(404)
 
         self.end_headers()
-
-        self.wfile.write(
-            html.encode("utf-8")
-        )
 
 
     def do_POST(self):
 
-        if self.path == "/webhook":
+        if self.path != "/webhook":
+
+            self.send_response(404)
+
+            self.end_headers()
+
+            return
+
+        try:
 
             content_length = int(
                 self.headers.get(
@@ -227,40 +260,44 @@ class HealthHandler(BaseHTTPRequestHandler):
                 content_length
             )
 
-            try:
-
-                data = json.loads(
-                    body.decode("utf-8")
-                )
-
-                print(
-                    "WEBHOOK MERCADO PAGO:",
-                    data
-                )
-
-            except Exception:
-
-                print(
-                    "WEBHOOK RECEBIDO:",
-                    body.decode(
-                        "utf-8",
-                        errors="ignore"
-                    )
-                )
-
-            self.send_response(200)
-
-            self.end_headers()
-
-            self.wfile.write(
-                b"OK"
+            print(
+                "WEBHOOK MERCADO PAGO:"
             )
 
-        else:
+            print(
+                body.decode(
+                    "utf-8",
+                    errors="ignore"
+                )
+            )
 
-            self.send_response(404)
+            print(
+                "HEADERS:"
+            )
 
-            self.end_headers()
+            print(
+                dict(self.headers)
+            )
+
+        except Exception as e:
+
+            print(
+                "ERRO AO LER WEBHOOK:",
+                repr(e)
+            )
+
+        self.send_response(200)
+
+        self.send_header(
+            "Content-Type",
+            "application/json"
+        )
+
+        self.end_headers()
+
+        self.wfile.write(
+            b'{"status":"received"}'
+        )
 
 
     def log_message(
@@ -268,6 +305,7 @@ class HealthHandler(BaseHTTPRequestHandler):
         format,
         *args
     ):
+
         pass
 
 
