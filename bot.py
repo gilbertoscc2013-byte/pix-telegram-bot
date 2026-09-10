@@ -83,9 +83,7 @@ async def pix(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         transacao = resposta["point_of_interaction"]
 
-        dados_pix = transacao[
-            "transaction_data"
-        ]
+        dados_pix = transacao["transaction_data"]
 
         codigo_pix = dados_pix["qr_code"]
 
@@ -121,6 +119,12 @@ class HealthHandler(BaseHTTPRequestHandler):
         if self.path == "/":
 
             self.send_response(200)
+
+            self.send_header(
+                "Content-Type",
+                "text/plain; charset=utf-8"
+            )
+
             self.end_headers()
 
             self.wfile.write(
@@ -135,7 +139,8 @@ class HealthHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
 
-        if self.path != "/webhook":
+        # Aceita /webhook e também /webhook com parâmetros
+        if not self.path.startswith("/webhook"):
 
             self.send_response(404)
             self.end_headers()
@@ -169,7 +174,8 @@ class HealthHandler(BaseHTTPRequestHandler):
             print("================================")
             print("WEBHOOK MERCADO PAGO RECEBIDO")
             print("================================")
-            print(data)
+            print("URL:", self.path)
+            print("DADOS:", data)
 
             # Responder rapidamente ao Mercado Pago
             self.send_response(200)
@@ -193,7 +199,17 @@ class HealthHandler(BaseHTTPRequestHandler):
             )
 
             self.send_response(200)
+
+            self.send_header(
+                "Content-Type",
+                "application/json"
+            )
+
             self.end_headers()
+
+            self.wfile.write(
+                b'{"status":"received"}'
+            )
 
 
     def log_message(
