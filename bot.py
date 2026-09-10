@@ -60,10 +60,10 @@ async def pix(update: Update, context: ContextTypes.DEFAULT_TYPE):
             }
         }
 
-        request_options = mercadopago.config.RequestOptions(
-            idempotency_key=str(uuid.uuid4())
-        )
-
+        opções_de_solicitação = mercadopago.config.Opções de solicitação()
+opções_de_solicitação.cabeçalhos_personalizados = {
+    'x-idempotency-key': str(uuid.uuid4())
+}
         resultado = sdk.payment().create(
             pagamento,
             request_options
