@@ -32,7 +32,7 @@ async def pix(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    valor = 1.00
+    valor = 127.00
 
     try:
         sdk = mercadopago.SDK(MP_ACCESS_TOKEN)
